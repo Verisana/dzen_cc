@@ -6,7 +6,7 @@ from django.views.generic.base import RedirectView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', RedirectView.as_view(pattern_name='admin')),
+    path('', RedirectView.as_view(pattern_name='admin:login')),
 ]
 
 admin.site.site_header = 'Dzen Command Center Administration'
