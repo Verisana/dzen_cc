@@ -6,6 +6,16 @@ class Profile(AbstractUser):
     pass
 
 
+class InfoKKT(models.Model):
+    name = models.CharField(max_length=64)
+    created_at = models.DateTimeField(auto_now_add=True)
+    ip_inn = models.CharField(max_length=32)
+    kkt_number = models.CharField(max_length=32)
+    fn_number = models.CharField(max_length=32)
+    def __str__(self):
+        return f'{self.name}'
+
+
 class QuickRestoApi(models.Model):
     name = models.CharField(max_length=64)
     api_login = models.CharField(max_length=32)
