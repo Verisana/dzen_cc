@@ -36,13 +36,6 @@ class OfdruApi(models.Model):
         return f'{self.name}'
 
 
-class KonturOfdApi(models.Model):
-    name = models.CharField(max_length=64)
-    created_at = models.DateTimeField(auto_now_add=True)
-    def __str__(self):
-        return f'{self.name}'
-
-
 class TelegramBotSettings(models.Model):
     name = models.CharField(max_length=64)
     token = models.CharField(max_length=64)

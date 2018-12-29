@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserChangeForm
-from .models import Profile, QuickRestoApi, TelegramBotSettings, OfdruApi, KonturOfdApi, InfoKKT
+from .models import Profile, QuickRestoApi, TelegramBotSettings, OfdruApi, InfoKKT
 
 
 class ProfileChangeForm(UserChangeForm):
@@ -29,11 +29,6 @@ class OfdruApiAdmin(admin.ModelAdmin):
     list_display = [field.name for field in OfdruApi._meta.fields if field.name != 'id']
 
 
-class KonturOfdApiAdmin(admin.ModelAdmin):
-    fields = [field.name for field in KonturOfdApi._meta.fields if field.name != 'id' and field.name != 'created_at']
-    list_display = [field.name for field in KonturOfdApi._meta.fields if field.name != 'id']
-
-
 class TelegramBotSettingsAdmin(admin.ModelAdmin):
     fields = [field.name for field in TelegramBotSettings._meta.fields if field.name != 'id']
     list_display = [field.name for field in TelegramBotSettings._meta.fields if field.name != 'id']
@@ -41,7 +36,6 @@ class TelegramBotSettingsAdmin(admin.ModelAdmin):
 
 admin.site.register(QuickRestoApi, QuickRestoApiAdmin)
 admin.site.register(OfdruApi, OfdruApiAdmin)
-admin.site.register(KonturOfdApi, KonturOfdApiAdmin)
 admin.site.register(InfoKKT, InfoKKTAdmin)
 admin.site.register(Profile, ProfileAdmin)
 admin.site.register(TelegramBotSettings, TelegramBotSettingsAdmin)
