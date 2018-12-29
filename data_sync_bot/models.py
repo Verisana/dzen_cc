@@ -1,11 +1,29 @@
 from django.db import models
 
 
+class PlacesToSell(models.Model):
+    place_name = models.CharField(max_length=64)
+    address = models.CharField(max_length=128)
+    quickresto_id = models.IntegerField(blank=True, null=True)
+    quickresto_place_name = models.CharField(max_length=128)
+
+    def __str__(self):
+        return f'{self.place_name}'
+
+
+class PlacePriceModificator(models.Model):
+    place_to_sale = models.ForeignKey(PlacesToSell, on_delete=models.CASCADE)
+    price = models.DecimalField(max_digits=7, decimal_places=2)
+
+    def __str__(self):
+        return f'{self.place_to_sale}, {self.price}'
+
+
 class GoodsBase(models.Model):
     group_name =  models.CharField(max_length=64)
     under_group_name = models.CharField(max_length=64)
     dish_name = models.CharField(max_length=64)
-    base_price = models.DecimalField(max_digits=7, decimal_places=2)
+    base_price = models.ManyToManyField(PlacePriceModificator)
 
     def __str__(self):
         return f'{self.under_group_name}-{self.dish_name}-{self.base_price}'
@@ -26,11 +44,7 @@ class SalesData(models.Model):
     deal_date = models.DateTimeField()
     kkt_rnm = models.CharField(max_length=32)
     fnnum = models.CharField(max_length=32)
-    address = models.CharField(max_length=128,
-                                    choices=(
-                                        ('karla_libknehta', 'Карла Либкнехта'),
-                                        ('vikulova', 'Викулова'),
-                                    ))
+    address = models.ForeignKey(PlacesToSell, on_delete=models.CASCADE)
     receipt_type = models.CharField(max_length=128,
                                     choices=(
                                         ('sale', 'Продажа'),
