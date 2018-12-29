@@ -46,8 +46,12 @@ class OFDruConnector():
         endpoint = f'/api/integration/v1/inn/{self.inn}/kkt/{self.kkt}/receipts?AuthToken={self.token}&dateFrom={date_from}&dateTo={date_to}'
         return self.send_request(endpoint, 'get')
 
-    def get_recepit_info(self, receipt_id):
+    def get_recepit_info_byid(self, receipt_id):
         endpoint = f'/api/integration/v1/inn/{self.inn}/kkt/{self.kkt}/receipt/{receipt_id}?AuthToken={self.token}'
+        return self.send_request(endpoint, 'get')
+
+    def get_recepit_info_bynum(self, shift_num, receipt_num):
+        endpoint = f'/api/integration/v1/inn/{self.inn}/kkt/{self.kkt}/zreport/{shift_num}/receipt/{receipt_num}?AuthToken={self.token}'
         return self.send_request(endpoint, 'get')
 
     def get_closedshift_receipts(self, shift):
