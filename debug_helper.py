@@ -2,6 +2,7 @@ import telegram
 from profiles.models import TelegramBotSettings, QuickRestoApi, OfdruApi
 from data_sync_bot.api_manager.ofdru_api import OFDruConnector
 from data_sync_bot.api_manager.quickresto_api import QuickRestoConnector
+from data_sync_bot.models import PlacePriceModificator
 import json
 
 telegram_sett = TelegramBotSettings.objects.get(name='DzenGroup_bot')
@@ -18,3 +19,40 @@ date_rec = ofdru_conn.get_daterange_receipts('2018-12-27T00:00', '2018-12-27T23:
 #rec = json.loads(rp_rec.text)
 date_rec = json.loads(date_rec.text)
 all_rec = json.loads(rp.text)
+
+prices_vikulova = [
+    139,
+    59,
+    20,
+	79,
+	89,
+	30,
+	35,
+	10,
+	200,
+	99,
+	120,
+	150,
+]
+
+prices_karla = [
+    20,
+	119,
+	149,
+	199,
+	99,
+	69,
+	59,
+	79,
+	59,
+	89,
+	139,
+	29,
+	249,
+]
+
+for i in prices_vikulova:
+    PlacePriceModificator.objects.create(place_to_sale_id=2, price=i)
+
+for i in prices_karla:
+    PlacePriceModificator.objects.create(place_to_sale_id=1, price=i)

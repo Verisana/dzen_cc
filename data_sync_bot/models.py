@@ -5,11 +5,20 @@ class PlacesToSell(models.Model):
     place_name = models.CharField(max_length=64)
     address = models.CharField(max_length=128)
     quickresto_id = models.IntegerField(blank=True, null=True)
-    quickresto_place_name = models.CharField(max_length=128)
+    quickresto_place_name = models.CharField(max_length=128, blank=True, null=True)
 
     def __str__(self):
         return f'{self.place_name}'
 
+
+class EmpoyeesList(models.Model):
+    name = models.CharField(max_length=64)
+    surname = models.CharField(max_length=64, blank=True, null=True)
+    rate_per_hour = models.IntegerField(default=100, null=True)
+    quickresto_id = models.IntegerField(blank=True, null=True)
+
+    def __str__(self):
+        return f'{self.name}'
 
 class PlacePriceModificator(models.Model):
     place_to_sale = models.ForeignKey(PlacesToSell, on_delete=models.CASCADE)
@@ -53,7 +62,7 @@ class SalesData(models.Model):
                                     ))
     is_fulled = models.BooleanField(default=False)
     sold_goods = models.ManyToManyField(GoodsToSale, blank=True)
-    staff_name = models.CharField(max_length=128, blank=True, null=True)
+    staff_name = models.ForeignKey(EmpoyeesList, on_delete=models.CASCADE, blank=True, null=True)
     payment_type = models.CharField(max_length=64, blank=True, null=True,
                                     choices=(
                                         ('cash', 'Наличный'),
@@ -63,4 +72,3 @@ class SalesData(models.Model):
 
     def __str__(self):
         return f'{self.kkt_rnm}, {self.receipt_num}, {self.deal_date}'
-
