@@ -33,6 +33,7 @@ class GoodsBase(models.Model):
     under_group_name = models.CharField(max_length=64)
     dish_name = models.CharField(max_length=64)
     base_price = models.ManyToManyField(PlacePriceModificator)
+    quickresto_id = models.IntegerField(blank=True, null=True)
 
     def __str__(self):
         return f'{self.under_group_name}-{self.dish_name}-{self.base_price}'

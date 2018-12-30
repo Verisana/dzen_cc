@@ -22,6 +22,12 @@ class QuickRestoConnector():
         params = {'id': shift_id, 'className': 'ru.edgex.quickresto.modules.front.zreport.Shift'}
         return self.send_request('api/remove?moduleName=front.zreport', 'post', params=params)
 
+    def list_all_dish_objects(self, ):
+        return self.send_request('api/list?moduleName=warehouse.nomenclature.dish', 'get')
+
+    def tree_all_dish_objects(self, ):
+        return self.send_request('api/tree?moduleName=warehouse.nomenclature.dish', 'get')
+
     def send_request(self, endpoint, method, params=None):
         if method == 'get':
             response = requests.get(self.BASE_URL+endpoint, headers=self.HEADER, json=params, auth=(self.login, self.password))

@@ -37,7 +37,7 @@ class OFDruConnector():
             self.ofdru_sett.save()
             return True
         else:
-            message = f'Error in function "get_new_token"/nResponse code: {response.status_code}/nResponse text: {response.text}'
+            message = f'Error in function "get_new_token"\nResponse code: {response.status_code}\nResponse text: {response.text}'
             self.telegram.send_message(chat_id=self.telegram_sett.chat_emerg, text=message)
             return False
 
