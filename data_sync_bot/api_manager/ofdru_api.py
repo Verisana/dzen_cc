@@ -2,21 +2,23 @@ import requests
 import json
 from django.utils import timezone
 from dateutil.parser import parse
-from profiles.models import OfdruApi, TelegramBotSettings, InfoKKT
-import telegram
+from profiles.models import OfdruApi
+from data_sync_bot.models import PlacesToSell
+from inspect import currentframe, getframeinfo
+from utils.errors_handler import ErrorsHandler
 
 
 class OFDruConnector():
     BASE_URL = 'https://ofd.ru'
     HEADER = {'content-type': 'application/json', 'charset': 'utf-8'}
 
-    def __init__(self, setting_id, infokkt_id):
+    def __init__(self, setting_id, place_id):
         self.ofdru_sett = OfdruApi.objects.get(id=setting_id)
-        self.infokkt = InfoKKT.objects.get(id=infokkt_id)
-        self.inn = self.infokkt.ip_inn
-        self.kkt = self.infokkt.kkt_number
-        self.fnnum = self.infokkt.fn_number
-        self.telegram_sett = TelegramBotSettings.objects.get(name='DzenGroup_bot')
+        self.places_to_sell = PlacesToSell.objects.get(id=place_id)
+        self.inn = self.places_to_sell.ip_inn
+        self.kkt = self.places_to_sell.kkt_number
+        self.fnnum = self.places_to_sell.fn_number
+        self.errors = ErrorsHandler()
         self.login = self.ofdru_sett.login
         self.password = self.ofdru_sett.password
         if not self.ofdru_sett.token_expiration or not self.ofdru_sett.token:
@@ -25,7 +27,6 @@ class OFDruConnector():
             if timezone.now().timestamp() >= self.ofdru_sett.token_expiration.timestamp():
                 self.get_new_token()
         self.token = self.ofdru_sett.token
-        self.telegram = telegram.Bot(token=self.telegram_sett.token)
 
     def get_new_token(self):
         params = {'Login': self.login, 'Password': self.password}
@@ -37,8 +38,9 @@ class OFDruConnector():
             self.ofdru_sett.save()
             return True
         else:
-            message = f'Error in function "get_new_token"\nResponse code: {response.status_code}\nResponse text: {response.text}'
-            self.telegram.send_message(chat_id=self.telegram_sett.chat_emerg, text=message)
+            cf = currentframe()
+            filename = getframeinfo(cf).filename
+            self.errors.invalid_response_code(filename, cf.f_code.co_name, cf.f_lineno, response)
             return False
 
     def get_daterange_receipts(self, date_from, date_to):

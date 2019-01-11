@@ -4,6 +4,9 @@ from django.db import models
 class PlacesToSell(models.Model):
     place_name = models.CharField(max_length=64)
     address = models.CharField(max_length=128)
+    ip_inn = models.CharField(max_length=32)
+    kkt_number = models.CharField(max_length=32)
+    fn_number = models.CharField(max_length=32)
     quickresto_id = models.IntegerField(blank=True, null=True)
     quickresto_place_name = models.CharField(max_length=128, blank=True, null=True)
 
@@ -32,8 +35,9 @@ class GoodsBase(models.Model):
     group_name =  models.CharField(max_length=64)
     under_group_name = models.CharField(max_length=64)
     dish_name = models.CharField(max_length=64)
-    base_price = models.ManyToManyField(PlacePriceModificator)
-    quickresto_id = models.IntegerField(blank=True, null=True)
+    base_price = models.ManyToManyField(PlacePriceModificator, blank=True)
+    quickresto_id = models.IntegerField(blank=True, null=True, unique=True)
+    keyword_ident = models.CharField(max_length=64, null=True, blank=True, unique=True)
 
     def __str__(self):
         return f'{self.under_group_name}-{self.dish_name}-{self.base_price}'
