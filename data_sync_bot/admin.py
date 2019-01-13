@@ -1,5 +1,5 @@
 from django.contrib import admin
-from data_sync_bot.models import GoodsBase, GoodsToSale, SalesData, PlacesToSell, PlacePriceModificator, EmpoyeesList
+from data_sync_bot.models import GoodsBase, GoodsToSale, SalesData, PlacesToSell, PlacePriceModificator, EmployeesList
 
 
 class PlacesToSellAdmin(admin.ModelAdmin):
@@ -7,9 +7,9 @@ class PlacesToSellAdmin(admin.ModelAdmin):
     list_display = [field.name for field in PlacesToSell._meta.fields if field.name != 'id']
 
 
-class EmpoyeesListAdmin(admin.ModelAdmin):
-    fields = [field.name for field in EmpoyeesList._meta.fields if field.name != 'id']
-    list_display = [field.name for field in EmpoyeesList._meta.fields if field.name != 'id']
+class EmployeesListAdmin(admin.ModelAdmin):
+    fields = [field.name for field in EmployeesList._meta.fields if field.name != 'id']
+    list_display = [field.name for field in EmployeesList._meta.fields if field.name != 'id']
 
 
 class PlacePriceModificatorAdmin(admin.ModelAdmin):
@@ -37,7 +37,7 @@ class SalesDataAdmin(admin.ModelAdmin):
 
 
 admin.site.register(PlacesToSell, PlacesToSellAdmin)
-admin.site.register(EmpoyeesList, EmpoyeesListAdmin)
+admin.site.register(EmployeesList, EmployeesListAdmin)
 admin.site.register(PlacePriceModificator, PlacePriceModificatorAdmin)
 admin.site.register(GoodsBase, GoodsBaseAdmin)
 admin.site.register(GoodsToSale, GoodsToSaleAdmin)

@@ -14,12 +14,12 @@ class PlacesToSell(models.Model):
         return f'{self.place_name}'
 
 
-class EmpoyeesList(models.Model):
+class EmployeesList(models.Model):
     name = models.CharField(max_length=64)
     surname = models.CharField(max_length=64, blank=True, null=True)
     rate_per_hour = models.IntegerField(default=100, null=True)
     quickresto_id = models.IntegerField(blank=True, null=True)
-
+    mask_ident = models.CharField(max_length=64, blank=True, null=True)
     def __str__(self):
         return f'{self.name}'
 
@@ -48,7 +48,7 @@ class GoodsToSale(models.Model):
     amount = models.IntegerField(default=1)
 
     def __str__(self):
-        return f'{self.goods_object} * {self.amount}'
+        return f'{self.goods_object.dish_name} * {self.amount}'
 
 
 class SalesData(models.Model):
@@ -67,7 +67,7 @@ class SalesData(models.Model):
                                     ))
     is_fulled = models.BooleanField(default=False)
     sold_goods = models.ManyToManyField(GoodsToSale, blank=True)
-    staff_name = models.ForeignKey(EmpoyeesList, on_delete=models.CASCADE, blank=True, null=True)
+    staff_name = models.ForeignKey(EmployeesList, on_delete=models.CASCADE, blank=True, null=True)
     payment_type = models.CharField(max_length=64, blank=True, null=True,
                                     choices=(
                                         ('cash', 'Наличный'),
