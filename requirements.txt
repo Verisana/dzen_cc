@@ -10,4 +10,3 @@ flower
 psycopg2-binary
 python-telegram-bot
 cython
-uwsgi
