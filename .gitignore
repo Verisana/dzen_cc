@@ -8,6 +8,7 @@ ad_info_4.json
 proxies_list
 proxies_list.pickle
 celerybeat.pid
+celerybeat-schedule.*
 celerybeat-schedule
 local_settings.py
 *.pyc
@@ -18,3 +19,4 @@ __pycache__
 venv/ 
 *log
 static_files/
+
