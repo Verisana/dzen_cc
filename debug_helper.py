@@ -4,6 +4,7 @@ from data_sync_bot.api_manager.ofdru_api import OFDruConnector
 from data_sync_bot.api_manager.quickresto_api import QuickRestoConnector
 from data_sync_bot.receipt_manager.ofd_receipt_saver import OFDReceiptSaver
 from data_sync_bot.models import SalesData
+from data_sync_bot.tasks import check_updates
 import json
 
 
@@ -30,3 +31,9 @@ date_rec = ofdru_conn.get_daterange_receipts('2018-12-27T00:00', '2018-12-27T23:
 date_rec = json.loads(date_rec.text)
 #rp_rec = ofdru_conn.get_recepit_info('defdef94-af80-4177-2852-352932b66cc0')
 #rec = json.loads(rp_rec.text)
+
+#CELERY
+celery flower -A dzen_cc --loglevel=INFO
+celery -A dzen_cc beat -l info
+celery -A dzen_cc worker -l info -n check_updates@ubuntu --purge
+check_updates()

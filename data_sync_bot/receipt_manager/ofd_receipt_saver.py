@@ -17,30 +17,66 @@ class OFDReceiptSaver:
         self.employees_list = EmployeesList.objects.all()
         self.goods_base = GoodsBase.objects.all()
 
-    def check_response_for_errors(self, response):
+    def check_response_for_errors(self, response, text, debug_info=None):
+        if not debug_info:
+            debug_info = {
+                'filename': None,
+                'function_name': None,
+                'line_number': None,
+            }
+
         if response.status_code == 200:
             response = json.loads(response.text)
             if not response['Status'] == 'Success':
-                cf = currentframe()
-                filename = getframeinfo(cf).filename
-                self.errors.invalid_response_content(filename, cf.f_code.co_name, cf.f_lineno, response)
+                self.errors.invalid_response_content(debug_info['filename'],
+                                                     debug_info['function_name'],
+                                                     debug_info['line_number'],
+                                                     response, text)
                 return False
             return response
         else:
-            cf = currentframe()
-            filename = getframeinfo(cf).filename
-            self.errors.invalid_response_code(filename, cf.f_code.co_name, cf.f_lineno, response)
+            self.errors.invalid_response_code(debug_info['filename'],
+                                              debug_info['function_name'],
+                                              debug_info['line_number'],
+                                              response, text)
             return False
 
     def get_receipts_bydate(self, date_from, date_to, ofdru_conn):
+        text = [date_from, date_to]
         receipts_by_date = ofdru_conn.get_daterange_receipts(date_from, date_to)
-        return self.check_response_for_errors(receipts_by_date)
+        cf = currentframe()
+        filename = getframeinfo(cf).filename
+        debug_info = {
+            'filename': filename,
+            'function_name': cf.f_code.co_name,
+            'line_number': cf.f_lineno,
+        }
+        return self.check_response_for_errors(receipts_by_date, text, debug_info=debug_info)
 
     def get_receipt_by_num(self, shift_num, receipt_num, ofdru_conn):
+        text = [shift_num, receipt_num, ofdru_conn.places_to_sell.address]
         receipt_info = ofdru_conn.get_recepit_info_bynum(shift_num=shift_num,
                                                          receipt_num=receipt_num)
-        return self.check_response_for_errors(receipt_info)
+        cf = currentframe()
+        filename = getframeinfo(cf).filename
+        debug_info = {
+            'filename': filename,
+            'function_name': cf.f_code.co_name,
+            'line_number': cf.f_lineno,
+        }
+        return self.check_response_for_errors(receipt_info, text, debug_info=debug_info)
 
+    def get_closedshift_receipts(self, shift_num, ofdru_conn):
+        text = [shift_num, ofdru_conn.places_to_sell.address]
+        receipt_info = ofdru_conn.get_closedshift_receipts(shift_num)
+        cf = currentframe()
+        filename = getframeinfo(cf).filename
+        debug_info = {
+            'filename': filename,
+            'function_name': cf.f_code.co_name,
+            'line_number': cf.f_lineno,
+        }
+        return self.check_response_for_errors(receipt_info, text, debug_info=debug_info)
 
     def fillup_salesdata_entry(self, receipt, new_salesdata_object):
         if receipt['Data']['Amount_Cash']:
@@ -112,73 +148,72 @@ class OFDReceiptSaver:
                 address = place
                 break
 
-        new_salesdata_object = SalesData.objects.get_or_create(
-                shift_number=receipt['Data']['ShiftNumber'],
-                receipt_num=receipt['Data']['Document_Number'],
-                receipt_num_inshift=receipt_num_inshift,
-                deal_date=parse(receipt['Data']['DateTime']).astimezone(),
-                kkt_rnm=receipt['Data']['KKT_RegNumber'],
-                fnnum=receipt['Data']['FN_FactoryNumber'],
-                address=address,
-                is_fulled=is_fulled,
-                receipt_type=receipt_type,
-                receipt_sum=receipt_sum,
-            )
+        new_salesdata_object = SalesData.objects.update_or_create(
+            kkt_rnm=receipt['Data']['KKT_RegNumber'],
+            receipt_num=receipt['Data']['Document_Number'],
+            defaults = {
+                'shift_number': receipt['Data']['ShiftNumber'],
+                'receipt_num_inshift': receipt_num_inshift,
+                'deal_date': parse(receipt['Data']['DateTime']).astimezone(),
+                'fnnum': receipt['Data']['FN_FactoryNumber'],
+                'address': address,
+                'is_fulled': is_fulled,
+                'receipt_type': receipt_type,
+                'receipt_sum': receipt_sum,
+            }
+        )
 
         if receipt['Data']['Tag'] == 3:
             self.fillup_salesdata_entry(receipt, new_salesdata_object[0])
 
-    def check_open_shift_receipt(self, shift_number, ofdru_conn):
+    def check_open_shift_receipt(self, shift_number, ofdru_conn, place):
         try:
-            SalesData.objects.get(shift_number=shift_number, receipt_num_inshift=0)
+            SalesData.objects.filter(address=place).get(shift_number=shift_number, receipt_num_inshift=0)
         except SalesData.DoesNotExist:
             open_receipt = self.get_receipt_by_num(shift_num=shift_number,
                                                    receipt_num=0,
                                                    ofdru_conn=ofdru_conn)
             self.create_new_entry_salesdata(open_receipt)
 
-    def check_close_shift_receipt(self, shift_number, ofdru_conn):
+    def check_close_shift_receipt(self, shift_number, ofdru_conn, place):
         try:
-            SalesData.objects.get(shift_number=shift_number, receipt_type='close_shift')
+            SalesData.objects.filter(address=place).get(shift_number=shift_number, receipt_type='close_shift')
         except SalesData.DoesNotExist:
-            last_receipt_inshift = SalesData.objects.filter(shift_number=shift_number).order_by('-receipt_num_inshift')[0]
+            last_receipt_inshift = SalesData.objects.filter(address=place).filter(shift_number=shift_number).order_by('-receipt_num_inshift')[0]
             open_receipt = self.get_receipt_by_num(shift_num=shift_number,
-                                                   receipt_num=last_receipt_inshift+1,
+                                                   receipt_num=last_receipt_inshift.receipt_num_inshift+1,
                                                    ofdru_conn=ofdru_conn)
             self.create_new_entry_salesdata(open_receipt)
 
-    def add_new_receipts(self, receipts_to_add, ofdru_conn):
-        for receipt in receipts_to_add['Data']:
+    def add_new_receipts(self, receipts_to_add, ofdru_conn, place):
+        for receipt in receipts_to_add['Data'][::-1]:
             try:
-                last_receipt = SalesData.objects.latest('deal_date')
+                last_receipt = SalesData.objects.filter(address=place).latest('deal_date')
             except SalesData.DoesNotExist:
-                self.check_open_shift_receipt(receipt['DocShiftNumber'], ofdru_conn)
+                self.check_open_shift_receipt(receipt['DocShiftNumber'], ofdru_conn, place)
                 receipt_info = self.get_receipt_by_num(shift_num=receipt['DocShiftNumber'],
                                                        receipt_num=receipt['ReceiptNumber'],
                                                        ofdru_conn=ofdru_conn)
-                self.add_new_receipts(receipt_info, ofdru_conn)
-                last_receipt = SalesData.objects.latest('deal_date')
+                self.create_new_entry_salesdata(receipt_info)
+                last_receipt = SalesData.objects.filter(address=place).latest('deal_date')
 
             if receipt['ReceiptNumber'] == 1:
-                self.check_open_shift_receipt(receipt['DocShiftNumber'], ofdru_conn)
+                self.check_open_shift_receipt(receipt['DocShiftNumber'], ofdru_conn, place)
+                self.check_close_shift_receipt(receipt['DocShiftNumber']-1, ofdru_conn, place)
 
             if receipt['DocNumber'] > last_receipt.receipt_num:
                 receipt_info = self.get_receipt_by_num(shift_num=receipt['DocShiftNumber'],
                                                        receipt_num=receipt['ReceiptNumber'],
                                                        ofdru_conn=ofdru_conn)
-                self.add_new_receipts(receipt_info, ofdru_conn)
-
-            if receipt['DocShiftNumber'] > last_receipt.shift_number:
-                self.check_close_shift_receipt(last_receipt.shift_number, ofdru_conn)
-
+                self.create_new_entry_salesdata(receipt_info)
 
     def check_new_receipts(self):
         for place in self.places_to_sell:
             ofdru_conn = OFDruConnector(setting_id=self.ofdru_sett.id, place_id=place.id)
             now_time = timezone.now().astimezone()
-            time_diff = now_time - timedelta(minutes=10)
+            time_diff = now_time - timedelta(minutes=5)
             receipts_by_date = self.get_receipts_bydate(time_diff.strftime('%Y-%m-%dT%H:%M'),
                                                        now_time.strftime('%Y-%m-%dT%H:%M'),
                                                        ofdru_conn)
             if receipts_by_date != False:
-                self.add_new_receipts(receipts_by_date, ofdru_conn)
+                self.add_new_receipts(receipts_by_date, ofdru_conn, place)

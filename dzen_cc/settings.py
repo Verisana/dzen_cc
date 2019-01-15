@@ -115,12 +115,10 @@ CELERY_TIMEZONE = 'Asia/Yekaterinburg'
 CELERY_RESULT_BACKEND = 'rpc://'
 
 CELERY_BEAT_SCHEDULE = {
-
+    'check_updates': {
+        'task': 'data_sync_bot.tasks.check_updates',
+        'schedule': 120.0},
 }
-
-CELERY_TASK_ROUTES = {
-
-                    }
 
 try:
     from dzen_cc.local_settings import *

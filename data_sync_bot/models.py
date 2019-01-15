@@ -54,6 +54,7 @@ class GoodsToSale(models.Model):
 class SalesData(models.Model):
     shift_number = models.IntegerField(null=True)
     receipt_num = models.IntegerField(null=True)
+
     receipt_num_inshift = models.IntegerField(null=True)
     deal_date = models.DateTimeField()
     kkt_rnm = models.CharField(max_length=32)

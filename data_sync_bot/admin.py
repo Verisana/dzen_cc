@@ -34,7 +34,14 @@ class SalesDataAdmin(admin.ModelAdmin):
     fields = [field.name for field in SalesData._meta.fields if field.name != 'id'] + ['sold_goods']
     filter_horizontal = ['sold_goods']
     list_display = [field.name for field in SalesData._meta.fields if field.name != 'id']
-
+    list_filter = [
+        'address',
+        'receipt_type',
+        'is_fulled',
+        'staff_name',
+        'payment_type',
+    ]
+    search_fields = ['shift_number', 'receipt_num']
 
 admin.site.register(PlacesToSell, PlacesToSellAdmin)
 admin.site.register(EmployeesList, EmployeesListAdmin)
