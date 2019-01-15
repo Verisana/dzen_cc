@@ -1,3 +1,3 @@
 systemctl restart nginx
 systemctl restart uwsgi
-supervisorctl restart autobot-celery-groups:*
+supervisorctl restart dzen_cc-celery-groups:*
