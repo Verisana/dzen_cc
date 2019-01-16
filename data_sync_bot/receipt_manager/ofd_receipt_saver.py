@@ -114,7 +114,8 @@ class OFDReceiptSaver:
         else:
             cf = currentframe()
             filename = getframeinfo(cf).filename
-            self.errors.invalid_response_content(filename, cf.f_code.co_name, cf.f_lineno, receipt['Data']['Items'])
+            text = 'No recognized goods'
+            self.errors.invalid_response_content(filename, cf.f_code.co_name, cf.f_lineno, receipt['Data']['Items'], text)
 
         if payment_type and sold_goods and staff_name:
             is_fulled = True
@@ -179,11 +180,14 @@ class OFDReceiptSaver:
         try:
             SalesData.objects.filter(address=place).get(shift_number=shift_number, receipt_type='close_shift')
         except SalesData.DoesNotExist:
-            last_receipt_inshift = SalesData.objects.filter(address=place).filter(shift_number=shift_number).order_by('-receipt_num_inshift')[0]
-            open_receipt = self.get_receipt_by_num(shift_num=shift_number,
-                                                   receipt_num=last_receipt_inshift.receipt_num_inshift+1,
-                                                   ofdru_conn=ofdru_conn)
-            self.create_new_entry_salesdata(open_receipt)
+            if SalesData.objects.filter(address=place).filter(shift_number=shift_number).order_by('-receipt_num_inshift'):
+                last_receipt_inshift = SalesData.objects.filter(address=place).filter(shift_number=shift_number).order_by('-receipt_num_inshift')[0]
+                close_receipt = self.get_receipt_by_num(shift_num=shift_number,
+                                                        receipt_num=last_receipt_inshift.receipt_num_inshift+1,
+                                                        ofdru_conn=ofdru_conn)
+                self.create_new_entry_salesdata(close_receipt)
+            else:
+                print('No receipts')
 
     def add_new_receipts(self, receipts_to_add, ofdru_conn, place):
         for receipt in receipts_to_add['Data'][::-1]:
