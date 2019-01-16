@@ -3,7 +3,7 @@ import json
 import sys
 from profiles.models import TelegramBotSettings, QuickRestoApi
 from data_sync_bot.api_manager.quickresto_api import QuickRestoConnector
-from data_sync_bot.models import GoodsBase
+from data_sync_bot.models import GoodsBase, PlacesToSell, PlacePriceModificator
 
 
 telegram_sett = TelegramBotSettings.objects.get(name='DzenGroup_bot')
@@ -41,12 +41,25 @@ def standartize_all_data():
     #
     for tree_dishe in tree_dishes:
         if 'Category' not in tree_dishe['className']:
+            price_objects = []
+            for prices in tree_dishe['dishSales']:
+                place = PlacesToSell.objects.get(quickresto_id=prices['salePlace']['id'])
+                price_object = PlacePriceModificator.objects.update_or_create(
+                        place_to_sale=place,
+                        price=prices['price'],
+                        defaults={
+                            'place_to_sale': place,
+                            'price': prices['price'],
+                        }
+                    )[0]
+                price_objects.append(price_object)
             info = {
                 'dish_name': tree_dishe['name'],
                 'under_group_name': dish_by_id[tree_dishe['parentItem']['id']][0],
                 'group_name':       dish_by_id[tree_dishe['parentItem']['id']][0],
                 'keyword_ident': tree_dishe['itemTitle'],
                 'quickresto_id': tree_dishe['id'],
+                'base_price': price_objects,
             }
             for i in tree_dishes:
                 if info['under_group_name'] == i['name']:
@@ -59,15 +72,16 @@ def standartize_all_data():
 
 def update_database(data_to_update):
     for entry in data_to_update:
-        GoodsBase.objects.update_or_create(
-            quickresto_id=entry['quickresto_id'],
-            defaults={
-                'dish_name': entry['dish_name'],
-                'under_group_name': entry['under_group_name'],
-                'group_name': entry['group_name'],
-                'keyword_ident': entry['keyword_ident'],
-            }
-        )
+        goods_base = GoodsBase.objects.update_or_create(
+                quickresto_id=entry['quickresto_id'],
+                defaults={
+                    'dish_name': entry['dish_name'],
+                    'under_group_name': entry['under_group_name'],
+                    'group_name': entry['group_name'],
+                    'keyword_ident': entry['keyword_ident'],
+                }
+            )[0]
+        goods_base.base_price.set(entry['base_price'])
 
 
 all_goods, tree_dishes = refresh_data()

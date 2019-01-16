@@ -7,7 +7,7 @@ class PlacesToSell(models.Model):
     ip_inn = models.CharField(max_length=32)
     kkt_number = models.CharField(max_length=32)
     fn_number = models.CharField(max_length=32)
-    quickresto_id = models.IntegerField(blank=True, null=True)
+    quickresto_id = models.IntegerField(blank=True, null=True, unique=True)
     quickresto_place_name = models.CharField(max_length=128, blank=True, null=True)
 
     def __str__(self):
@@ -40,7 +40,7 @@ class GoodsBase(models.Model):
     keyword_ident = models.CharField(max_length=64, null=True, blank=True, unique=True)
 
     def __str__(self):
-        return f'{self.under_group_name}-{self.dish_name}-{self.base_price}'
+        return f'{self.under_group_name}-{self.dish_name}'
 
 
 class GoodsToSale(models.Model):
