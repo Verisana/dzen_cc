@@ -67,6 +67,7 @@ class SalesData(models.Model):
                                         ('close_shift', 'Закрытие смены'),
                                     ))
     is_fulled = models.BooleanField(default=False)
+    is_uploaded_quickresto = models.BooleanField(default=False)
     sold_goods = models.ManyToManyField(GoodsToSale, blank=True)
     staff_name = models.ForeignKey(EmployeesList, on_delete=models.CASCADE, blank=True, null=True)
     payment_type = models.CharField(max_length=64, blank=True, null=True,

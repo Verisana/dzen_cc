@@ -187,7 +187,7 @@ class OFDReceiptSaver:
                                                         ofdru_conn=ofdru_conn)
                 self.create_new_entry_salesdata(close_receipt)
             else:
-                print('No receipts')
+                pass
 
     def add_new_receipts(self, receipts_to_add, ofdru_conn, place):
         for receipt in receipts_to_add['Data'][::-1]:
@@ -211,6 +211,27 @@ class OFDReceiptSaver:
                                                        ofdru_conn=ofdru_conn)
                 self.create_new_entry_salesdata(receipt_info)
 
+    def check_integrity(self, ofdru_conn):
+        empty_receipts = SalesData.objects.filter(sold_goods=None, receipt_type='sale')
+        if not empty_receipts:
+            for receipt in empty_receipts:
+                receipt_from_ofd = self.get_receipt_by_num(receipt.shift_number, receipt.receipt_num_inshift, ofdru_conn)
+                self.fillup_salesdata_entry(receipt_from_ofd, receipt)
+
+        sales_data_to_check = SalesData.objects.filter(kkt_rnm=ofdru_conn.places_to_sell.kkt_number,
+                                                       deal_date__range=(timezone.now().astimezone()-timezone.timedelta(days=1),
+                                                                         timezone.now().astimezone())
+                                                       )
+        if not sales_data_to_check:
+            for counter, data in enumerate(sales_data_to_check):
+                if counter > 0:
+                    if not data.receipt_num-1 == sales_data_to_check[counter-1].receipt_num:
+                        cf = currentframe()
+                        filename = getframeinfo(cf).filename
+                        text = f'Missed receipt: {data.receipt_num-1} != {sales_data_to_check[counter-1].receipt_num}'
+                        self.errors.invalid_response_content(filename, cf.f_code.co_name, cf.f_lineno,
+                                                             data, text)
+
     def check_new_receipts(self):
         for place in self.places_to_sell:
             ofdru_conn = OFDruConnector(setting_id=self.ofdru_sett.id, place_id=place.id)
@@ -219,5 +240,6 @@ class OFDReceiptSaver:
             receipts_by_date = self.get_receipts_bydate(time_diff.strftime('%Y-%m-%dT%H:%M'),
                                                        now_time.strftime('%Y-%m-%dT%H:%M'),
                                                        ofdru_conn)
+            self.check_integrity(ofdru_conn)
             if receipts_by_date != False:
                 self.add_new_receipts(receipts_by_date, ofdru_conn, place)
