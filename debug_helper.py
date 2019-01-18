@@ -1,4 +1,5 @@
 import telegram
+from django.utils import timezone
 from profiles.models import TelegramBotSettings, QuickRestoApi, OfdruApi
 from data_sync_bot.api_manager.ofdru_api import OFDruConnector
 from data_sync_bot.api_manager.quickresto_api import QuickRestoConnector
@@ -14,8 +15,20 @@ pp = telegram.utils.request.Request(proxy_url='https://10.0.2.2:1080')
 telegram = telegram.Bot(token=telegram_sett.token, request=pp)
 
 #QUICKRESTO
+from data_sync_bot.api_manager.quickresto_api import QuickRestoConnector
+from django.utils import timezone
+from profiles.models import TelegramBotSettings, QuickRestoApi, OfdruApi
 quickresto_sett = QuickRestoApi.objects.get(name='QuickResto_Dzen')
 quickresto_conn = QuickRestoConnector(setting_id=1)
+create = quickresto_conn.create_receipt()
+create
+
+open = quickresto_conn.open_shift(1, 17, 4, timezone.now())
+open
+
+close = quickresto_conn.close_shift(16, 2, 4, timezone.now())
+close
+
 list_dishes = json.loads(quickresto_conn.list_all_dish_objects().text)
 tree_dishes = json.loads(quickresto_conn.tree_all_dish_objects().text)
 

@@ -9,6 +9,7 @@ class PlacesToSell(models.Model):
     fn_number = models.CharField(max_length=32)
     quickresto_id = models.IntegerField(blank=True, null=True, unique=True)
     quickresto_place_name = models.CharField(max_length=128, blank=True, null=True)
+    quickresto_kkm_id = models.IntegerField(null=True, blank=True)
 
     def __str__(self):
         return f'{self.place_name}'
@@ -20,8 +21,10 @@ class EmployeesList(models.Model):
     rate_per_hour = models.IntegerField(default=100, null=True)
     quickresto_id = models.IntegerField(blank=True, null=True)
     mask_ident = models.CharField(max_length=64, blank=True, null=True)
+
     def __str__(self):
         return f'{self.name}'
+
 
 class PlacePriceModificator(models.Model):
     place_to_sale = models.ForeignKey(PlacesToSell, on_delete=models.CASCADE)
@@ -32,7 +35,7 @@ class PlacePriceModificator(models.Model):
 
 
 class GoodsBase(models.Model):
-    group_name =  models.CharField(max_length=64)
+    group_name = models.CharField(max_length=64)
     under_group_name = models.CharField(max_length=64)
     dish_name = models.CharField(max_length=64)
     base_price = models.ManyToManyField(PlacePriceModificator, blank=True)

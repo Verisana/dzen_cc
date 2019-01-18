@@ -1,3 +1,5 @@
+import json
+
 import telegram
 from profiles.models import TelegramBotSettings
 
@@ -9,7 +11,9 @@ class ErrorsHandler():
 
     def invalid_response_code(self, file_name, function_name, line_number, response, text):
         message = f'Error!\nFunction = {function_name}\nFile = {file_name}\nLine = {line_number}\nResponse code = {response.status_code}\nResponse text = {response.text}\nText = {text}'
-        self.telegram.send_message(chat_id=self.telegram_sett.chat_emerg, text=message)
+        error = json.loads(response.text)
+        if not error['Errors'][0] == 'InternalError':
+            self.telegram.send_message(chat_id=self.telegram_sett.chat_emerg, text=message)
 
     def invalid_response_content(self, file_name, function_name, line_number, response, text):
         message = f'Error!\nFunction = {function_name}\nFile = {file_name}\nLine = {line_number}\nResponse text = {response}\nText = {text}'

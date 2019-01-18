@@ -1,12 +1,14 @@
 import json
 from datetime import timedelta
 from inspect import currentframe, getframeinfo
-from utils.errors_handler import ErrorsHandler
+
 from dateutil.parser import parse
 from django.utils import timezone
-from profiles.models import OfdruApi
-from data_sync_bot.models import SalesData, PlacesToSell, EmployeesList, GoodsToSale, GoodsBase
+
 from data_sync_bot.api_manager.ofdru_api import OFDruConnector
+from data_sync_bot.models import SalesData, PlacesToSell, EmployeesList, GoodsToSale, GoodsBase
+from profiles.models import OfdruApi
+from utils.errors_handler import ErrorsHandler
 
 
 class OFDReceiptSaver:
@@ -115,7 +117,8 @@ class OFDReceiptSaver:
             cf = currentframe()
             filename = getframeinfo(cf).filename
             text = 'No recognized goods'
-            self.errors.invalid_response_content(filename, cf.f_code.co_name, cf.f_lineno, receipt['Data']['Items'], text)
+            self.errors.invalid_response_content(filename, cf.f_code.co_name, cf.f_lineno, receipt['Data']['Items'],
+                                                 text)
 
         if payment_type and sold_goods and staff_name:
             is_fulled = True
@@ -140,7 +143,8 @@ class OFDReceiptSaver:
             receipt_num_inshift = 0
         else:
             receipt_type = 'close_shift'
-            last_receipt = SalesData.objects.filter(shift_number=receipt['Data']['ShiftNumber']).order_by('-receipt_num_inshift')[0]
+            last_receipt = \
+            SalesData.objects.filter(shift_number=receipt['Data']['ShiftNumber']).order_by('-receipt_num_inshift')[0]
             receipt_num_inshift = last_receipt.receipt_num_inshift + 1
 
         address = None
@@ -152,7 +156,7 @@ class OFDReceiptSaver:
         new_salesdata_object = SalesData.objects.update_or_create(
             kkt_rnm=receipt['Data']['KKT_RegNumber'],
             receipt_num=receipt['Data']['Document_Number'],
-            defaults = {
+            defaults={
                 'shift_number': receipt['Data']['ShiftNumber'],
                 'receipt_num_inshift': receipt_num_inshift,
                 'deal_date': parse(receipt['Data']['DateTime']).astimezone(),
@@ -180,10 +184,13 @@ class OFDReceiptSaver:
         try:
             SalesData.objects.filter(address=place).get(shift_number=shift_number, receipt_type='close_shift')
         except SalesData.DoesNotExist:
-            if SalesData.objects.filter(address=place).filter(shift_number=shift_number).order_by('-receipt_num_inshift'):
-                last_receipt_inshift = SalesData.objects.filter(address=place).filter(shift_number=shift_number).order_by('-receipt_num_inshift')[0]
+            if SalesData.objects.filter(address=place).filter(shift_number=shift_number).order_by(
+                    '-receipt_num_inshift'):
+                last_receipt_inshift = \
+                SalesData.objects.filter(address=place).filter(shift_number=shift_number).order_by(
+                    '-receipt_num_inshift')[0]
                 close_receipt = self.get_receipt_by_num(shift_num=shift_number,
-                                                        receipt_num=last_receipt_inshift.receipt_num_inshift+1,
+                                                        receipt_num=last_receipt_inshift.receipt_num_inshift + 1,
                                                         ofdru_conn=ofdru_conn)
                 self.create_new_entry_salesdata(close_receipt)
             else:
@@ -203,7 +210,7 @@ class OFDReceiptSaver:
 
             if receipt['ReceiptNumber'] == 1:
                 self.check_open_shift_receipt(receipt['DocShiftNumber'], ofdru_conn, place)
-                self.check_close_shift_receipt(receipt['DocShiftNumber']-1, ofdru_conn, place)
+                self.check_close_shift_receipt(receipt['DocShiftNumber'] - 1, ofdru_conn, place)
 
             if receipt['DocNumber'] > last_receipt.receipt_num:
                 receipt_info = self.get_receipt_by_num(shift_num=receipt['DocShiftNumber'],
@@ -215,20 +222,22 @@ class OFDReceiptSaver:
         empty_receipts = SalesData.objects.filter(sold_goods=None, receipt_type='sale')
         if not empty_receipts:
             for receipt in empty_receipts:
-                receipt_from_ofd = self.get_receipt_by_num(receipt.shift_number, receipt.receipt_num_inshift, ofdru_conn)
+                receipt_from_ofd = self.get_receipt_by_num(receipt.shift_number, receipt.receipt_num_inshift,
+                                                           ofdru_conn)
                 self.fillup_salesdata_entry(receipt_from_ofd, receipt)
 
         sales_data_to_check = SalesData.objects.filter(kkt_rnm=ofdru_conn.places_to_sell.kkt_number,
-                                                       deal_date__range=(timezone.now().astimezone()-timezone.timedelta(days=1),
-                                                                         timezone.now().astimezone())
+                                                       deal_date__range=(
+                                                       timezone.now().astimezone() - timezone.timedelta(days=1),
+                                                       timezone.now().astimezone())
                                                        )
         if not sales_data_to_check:
             for counter, data in enumerate(sales_data_to_check):
                 if counter > 0:
-                    if not data.receipt_num-1 == sales_data_to_check[counter-1].receipt_num:
+                    if not data.receipt_num - 1 == sales_data_to_check[counter - 1].receipt_num:
                         cf = currentframe()
                         filename = getframeinfo(cf).filename
-                        text = f'Missed receipt: {data.receipt_num-1} != {sales_data_to_check[counter-1].receipt_num}'
+                        text = f'Missed receipt: {data.receipt_num - 1} != {sales_data_to_check[counter - 1].receipt_num}'
                         self.errors.invalid_response_content(filename, cf.f_code.co_name, cf.f_lineno,
                                                              data, text)
 
@@ -238,8 +247,8 @@ class OFDReceiptSaver:
             now_time = timezone.now().astimezone()
             time_diff = now_time - timedelta(minutes=5)
             receipts_by_date = self.get_receipts_bydate(time_diff.strftime('%Y-%m-%dT%H:%M'),
-                                                       now_time.strftime('%Y-%m-%dT%H:%M'),
-                                                       ofdru_conn)
+                                                        now_time.strftime('%Y-%m-%dT%H:%M'),
+                                                        ofdru_conn)
             self.check_integrity(ofdru_conn)
             if receipts_by_date != False:
                 self.add_new_receipts(receipts_by_date, ofdru_conn, place)
