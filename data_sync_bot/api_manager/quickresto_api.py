@@ -16,7 +16,7 @@ class QuickRestoConnector():
     def list_all_shifts(self):
         return self.send_request('api/list?moduleName=front.zreport', 'get')
 
-    def open_shift(self, front_id, kkm_id, shift_number, employee_id, opened):
+    def open_shift(self, front_id, kkm_id, shift_number, employee_id, place_id, opened):
         params = {
             'frontId': front_id,
             'incomplete': True,
@@ -25,6 +25,7 @@ class QuickRestoConnector():
             'shiftNumber': shift_number,
             'openedEmployee': {'id': employee_id},
             'opened': opened.isoformat().replace('+00:00', 'Z'),
+            'salePlace': {'id': place_id},
         }
         return self.send_request('api/create?moduleName=front.zreport', 'post', params=params)
 
@@ -43,39 +44,36 @@ class QuickRestoConnector():
         params = {'id': shift_id, 'className': 'ru.edgex.quickresto.modules.front.zreport.Shift'}
         return self.send_request('api/remove?moduleName=front.zreport', 'post', params=params)
 
-    def create_receipt(self):
-        params = {
-            'cashier': {'id': 4},
-            'returned': False,
-            'createDate': timezone.now().isoformat().replace('+00:00', 'Z'),
-            'documentNumber': 233,
-            'kkmTerminalName': {'id': 1},
-            'orderItemList': [{"storeItem": {"id": 46}, "amount": 1.0, "cookingPlace": {"id": 1}, "salePlace": {"id": 1}}],
-            #'payments': 0,
-            'shift': {'id': 17},
-        }
+    def create_receipt(self, date_create, total_sum, cash_sum, card_sum, employee_id, shift_front, shift_id, kkm_id,
+                       place, payment_type, dishes, shift_info):
         params = [
             {"actionType": "create", "moduleName": "front.orders",
-             "entity": {"tableOrderCreateTime":"2017-07-21T08:00:00.000Z", "createDate":"2017-07-21T08:01:00.000Z", "returned": False,
-                        "table": {"id": 1}, "cashier": {"id": 1}, "waiter": {"id": 1}, "frontTotalPrice": 99.0, "frontTotalAbsoluteDiscount": 3.0,
-                        "frontTotalAbsoluteCharge": 2.0, "frontSum": 100.0, "frontTotalCashMinusDiscount": 50.0, "frontTotalCard": 40.0,
-                        "frontTotalBonuses": 9.0, "shiftId":"dr-shift-1", "shift":{"id": shift_id, "kkmTerminal": {"id": 1}}
-                },
-            {"actionType": "create", "moduleName": "front.preorders.preorderitem",
-             "entity": {"order": {"id": "${1.id}"}, "storeItem": {"id": 1}, "amount": 2.0, "price": 50.0, "totalPrice": 100.0, "totalAbsoluteDiscount": 3.0,
-                        "totalAbsoluteCharge": 2.0, "cookingPlace": {"id": 1}, "salePlace": {"id": 1}}
-                },
-            {"actionType": "create", "moduleName": "front.orders.payment",
-             "entity": {"order":{"id": "${1.id}"}, "amount": 50.0, "paymentType": {"id": 1}, "customerType": "ORGANIZATION"}
-                },
-            {"actionType": "create", "moduleName": "front.orders.cashlessorder",
-             "entity": {"owner": {"id": "${1.id}"}, "pos": {"id": 2}, "totalSum": 40.0}
-             },
-            {"actionType": "action", "moduleName": "warehouse.store.reprocessor", "actionName": "processSince",
-             "entity": {"data" : {"since": 1500624000000}}
-             },
-        ]
-        return self.send_request('api/create?moduleName=front.orders', 'post', params=params)
+             "entity": {"tableOrderCreateTime": date_create, "createDate": date_create, "returned": False,
+                        "frontTotalPrice": total_sum, "frontTotalCashMinusDiscount": cash_sum,
+                        "frontTotalCard": card_sum, "cashier": {"id": employee_id}, "shiftId": shift_front,
+                        "shift": {"id": shift_id}, "kkmTerminal": {"id": kkm_id}}}]
+        payment = {"actionType": "create", "moduleName": "front.orders.payment",
+                   "entity": {"order": {"id": "${1.id}"}, "amount": total_sum, "paymentType": {"id": payment_type},
+                              "customerType": "ORGANIZATION"}}
+        process = {"actionType": "action", "moduleName": "warehouse.store.reprocessor", "actionName": "processSince",
+                   "entity": {"data": {"since": int(timezone.now().timestamp())}}}
+        orders = []
+        for dish in dishes:
+            order = {"actionType": "create", "moduleName": "front.preorders.preorderitem",
+                     "entity": {"order": {"id": "${1.id}"}, "storeItem": {"id": dish['id']}, "amount": dish['amount'],
+                     "price": dish['price'], "totalPrice": dish['amount']*dish['price'],
+                     "cookingPlace": {"id": place[1]}, "salePlace": {"id": place[0]}}}
+            orders.append(order)
+        shift_update = {"actionType": "update", "moduleName": "front.zreport",
+                        "entity": {'id': shift_id, 'kkmTerminal': {'id': kkm_id}, 'closedEmployee': {'id': employee_id},
+                        "totalCard": shift_info['total_card'], "totalCash": shift_info['total_cash'],
+                        "ordersCount": shift_info['total_receipts']}}
+
+        params.extend(orders)
+        params.append(payment)
+        params.append(process)
+        params.append(shift_update)
+        return self.send_request('api/write', 'post', params=params)
 
     def remove_receipt(self, receipt_id):
         params = {'id': receipt_id, 'className': 'ru.edgex.quickresto.modules.front.orders.OrderInfo'}

@@ -20,13 +20,16 @@ from django.utils import timezone
 from profiles.models import TelegramBotSettings, QuickRestoApi, OfdruApi
 quickresto_sett = QuickRestoApi.objects.get(name='QuickResto_Dzen')
 quickresto_conn = QuickRestoConnector(setting_id=1)
-create = quickresto_conn.create_receipt()
+create = quickresto_conn.create_receipt(timezone.now().isoformat().replace('+00:00', 'Z'),
+                                        40.0, 40.0, 0.0, 4, 'DZ_19', 19, 1, (1, 1), 1,
+                                        [{'id': 46, 'amount': 2.0, 'price': 20.0},],
+                                        {'total_card': 2300.0, 'total_cash': 1556.0, 'total_receipts': 10})
 create
 
-open = quickresto_conn.open_shift(1, 17, 4, timezone.now())
+open = quickresto_conn.open_shift('DZ_20', 1, 20, 4, timezone.now())
 open
 
-close = quickresto_conn.close_shift(16, 2, 4, timezone.now())
+close = quickresto_conn.close_shift(20, 1, 4, timezone.now())
 close
 
 list_dishes = json.loads(quickresto_conn.list_all_dish_objects().text)
