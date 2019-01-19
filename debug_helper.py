@@ -20,12 +20,11 @@ from data_sync_bot.api_manager.quickresto_api import QuickRestoConnector
 from django.utils import timezone
 from profiles.models import TelegramBotSettings, QuickRestoApi, OfdruApi
 from data_sync_bot.receipt_manager.quickresto_saver import QuickRestoSaver
-
-qr_saver = QuickRestoSaver()
-qr_saver.update_quikresto()
 quickresto_sett = QuickRestoApi.objects.get(name='QuickResto_Dzen')
 quickresto_conn = QuickRestoConnector(setting_id=1, place_id=1)
 
+qr_saver = QuickRestoSaver()
+qr_saver.update_quikresto()
 list_dishes = json.loads(quickresto_conn.list_all_dish_objects().text)
 tree_dishes = json.loads(quickresto_conn.tree_all_dish_objects().text)
 

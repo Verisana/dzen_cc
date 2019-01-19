@@ -40,6 +40,8 @@ class SalesDataAdmin(admin.ModelAdmin):
         'is_fulled',
         'staff_name',
         'payment_type',
+        'is_uploaded_quickresto',
+        'is_fulled',
     ]
     search_fields = ['shift_number', 'receipt_num']
 
