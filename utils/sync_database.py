@@ -7,12 +7,12 @@ from data_sync_bot.models import GoodsBase, PlacesToSell, PlacePriceModificator
 
 
 class SyncGoodsInDB:
-    def __init__(self):
+    def __init__(self, place_id=1):
         self.telegram_sett = TelegramBotSettings.objects.get(name='DzenGroup_bot')
         self.telegram = telegram.Bot(token=self.telegram_sett.token)
 
         self.quickresto_sett = QuickRestoApi.objects.get(name='QuickResto_Dzen')
-        self.quickresto_conn = QuickRestoConnector(setting_id=1)
+        self.quickresto_conn = QuickRestoConnector(setting_id=1, place_id=place_id)
 
         self.all_goods = GoodsBase.objects.all().order_by('quickresto_id')
         try:
@@ -41,7 +41,7 @@ class SyncGoodsInDB:
             if 'Category' not in tree_dishe['className']:
                 price_objects = []
                 for prices in tree_dishe['dishSales']:
-                    place = PlacesToSell.objects.get(quickresto_id=prices['salePlace']['id'])
+                    place = PlacesToSell.objects.get(quickresto_place_id=prices['salePlace']['id'])
                     price_object = PlacePriceModificator.objects.update_or_create(
                             place_to_sale=place,
                             price=prices['price'],

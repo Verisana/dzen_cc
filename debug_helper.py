@@ -4,6 +4,7 @@ from profiles.models import TelegramBotSettings, QuickRestoApi, OfdruApi
 from data_sync_bot.api_manager.ofdru_api import OFDruConnector
 from data_sync_bot.api_manager.quickresto_api import QuickRestoConnector
 from data_sync_bot.receipt_manager.ofd_receipt_saver import OFDReceiptSaver
+from data_sync_bot.receipt_manager.quickresto_saver import QuickRestoSaver
 from data_sync_bot.models import SalesData
 from data_sync_bot.tasks import check_updates
 import json
@@ -18,18 +19,23 @@ telegram = telegram.Bot(token=telegram_sett.token, request=pp)
 from data_sync_bot.api_manager.quickresto_api import QuickRestoConnector
 from django.utils import timezone
 from profiles.models import TelegramBotSettings, QuickRestoApi, OfdruApi
+from data_sync_bot.receipt_manager.quickresto_saver import QuickRestoSaver
+
+qr_saver = QuickRestoSaver()
+qr_saver.update_quikresto()
 quickresto_sett = QuickRestoApi.objects.get(name='QuickResto_Dzen')
-quickresto_conn = QuickRestoConnector(setting_id=1)
+quickresto_conn = QuickRestoConnector(setting_id=1, place_id=1)
+print(timezone.now().isoformat().replace('+00:00', 'Z'))
 create = quickresto_conn.create_receipt(timezone.now().isoformat().replace('+00:00', 'Z'),
-                                        40.0, 40.0, 0.0, 4, 'DZ_19', 19, 1, (1, 1), 1,
+                                        40.0, 40.0, 0.0, 4, 'DZ_23', 23, 1, (1, 1), 1,
                                         [{'id': 46, 'amount': 2.0, 'price': 20.0},],
-                                        {'total_card': 2300.0, 'total_cash': 1556.0, 'total_receipts': 10})
+                                        {'total_cash': 40.0, 'total_card': 0.0, 'total_receipts': 1})
 create
 
-open = quickresto_conn.open_shift('DZ_20', 1, 20, 4, timezone.now())
+open = quickresto_conn.open_shift('DZ_23', 1, 23, 4, timezone.now())
 open
 
-close = quickresto_conn.close_shift(20, 1, 4, timezone.now())
+close = quickresto_conn.close_shift(22, 1, 4, timezone.now())
 close
 
 list_dishes = json.loads(quickresto_conn.list_all_dish_objects().text)

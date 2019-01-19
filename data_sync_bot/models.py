@@ -7,9 +7,9 @@ class PlacesToSell(models.Model):
     ip_inn = models.CharField(max_length=32)
     kkt_number = models.CharField(max_length=32)
     fn_number = models.CharField(max_length=32)
-    quickresto_id = models.IntegerField(blank=True, null=True, unique=True)
-    quickresto_place_name = models.CharField(max_length=128, blank=True, null=True)
-    quickresto_kkm_id = models.IntegerField(null=True, blank=True)
+    quickresto_kkm_id = models.IntegerField(null=True, blank=True, unique=True)
+    quickresto_place_id = models.IntegerField(null=True, blank=True, unique=True)
+    quickresto_cookplace_id = models.IntegerField(null=True, blank=True, unique=True)
 
     def __str__(self):
         return f'{self.place_name}'
@@ -19,7 +19,7 @@ class EmployeesList(models.Model):
     name = models.CharField(max_length=64)
     surname = models.CharField(max_length=64, blank=True, null=True)
     rate_per_hour = models.IntegerField(default=100, null=True)
-    quickresto_id = models.IntegerField(blank=True, null=True)
+    quickresto_id = models.IntegerField(blank=True, null=True, unique=True)
     mask_ident = models.CharField(max_length=64, blank=True, null=True)
 
     def __str__(self):
@@ -79,6 +79,7 @@ class SalesData(models.Model):
                                         ('electronic', 'Безналичный'),
                                     ))
     receipt_sum = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True)
+    quickresto_shift_id = models.IntegerField(null=True, blank=True, unique=True)
 
     def __str__(self):
         return f'{self.kkt_rnm}, {self.receipt_num}, {self.deal_date}'
