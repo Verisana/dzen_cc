@@ -124,6 +124,8 @@ class QuickRestoSaver:
 
         response = quickresto_conn.create_receipt(receipt.deal_date, general, shift_info, sum_info, dishes)
         if response.status_code == 200:
+            response = json.loads(response.text)
+            receipt.quickresto_receipt_id = response['id']
             receipt.is_uploaded_quickresto = True
             receipt.save()
         else:

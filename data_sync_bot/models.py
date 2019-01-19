@@ -80,6 +80,7 @@ class SalesData(models.Model):
                                     ))
     receipt_sum = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True)
     quickresto_shift_id = models.IntegerField(null=True, blank=True, unique=True)
+    quickresto_receipt_id = models.IntegerField(null=True, blank=True, unique=True)
 
     def __str__(self):
         return f'{self.kkt_rnm}, {self.receipt_num}, {self.deal_date}'
