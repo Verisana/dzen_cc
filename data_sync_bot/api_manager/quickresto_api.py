@@ -49,7 +49,7 @@ class QuickRestoConnector():
     def create_receipt(self, date_create, general, shift_info, sum_info, dishes):
         params = [
             {"actionType": "create", "moduleName": "front.orders",
-             "entity": {"tableOrderCreateTime": date_create.isoformat().replace('+00:00', 'Z'),
+             "entity": {"tableOrderCreateTime": date_create.isoformat().replace('+00:00', 'Z'), "documentNumber": sum_info['document_number'],
                         "createDate": date_create.isoformat().replace('+00:00', 'Z'), "returned": False,
                         "frontTotalPrice": sum_info['total_sum'], "frontTotalCashMinusDiscount": sum_info['cash_sum'],
                         "frontTotalCard": sum_info['card_sum'], "cashier": {"id": general['employee_id']},

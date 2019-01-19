@@ -100,8 +100,9 @@ class QuickRestoSaver:
 
         sum_info = {
             'total_sum': float(round(receipt.receipt_sum, 2)),
-            'card_sum': float(round(cash_sum, 2)),
-            'cash_sum': float(round(card_sum, 2)),
+            'card_sum': float(round(card_sum, 2)),
+            'cash_sum': float(round(cash_sum, 2)),
+            'document_number': receipt.receipt_num,
         }
 
         dishes = []
