@@ -25,18 +25,6 @@ qr_saver = QuickRestoSaver()
 qr_saver.update_quikresto()
 quickresto_sett = QuickRestoApi.objects.get(name='QuickResto_Dzen')
 quickresto_conn = QuickRestoConnector(setting_id=1, place_id=1)
-print(timezone.now().isoformat().replace('+00:00', 'Z'))
-create = quickresto_conn.create_receipt(timezone.now().isoformat().replace('+00:00', 'Z'),
-                                        40.0, 40.0, 0.0, 4, 'DZ_23', 23, 1, (1, 1), 1,
-                                        [{'id': 46, 'amount': 2.0, 'price': 20.0},],
-                                        {'total_cash': 40.0, 'total_card': 0.0, 'total_receipts': 1})
-create
-
-open = quickresto_conn.open_shift('DZ_23', 1, 23, 4, timezone.now())
-open
-
-close = quickresto_conn.close_shift(22, 1, 4, timezone.now())
-close
 
 list_dishes = json.loads(quickresto_conn.list_all_dish_objects().text)
 tree_dishes = json.loads(quickresto_conn.tree_all_dish_objects().text)
