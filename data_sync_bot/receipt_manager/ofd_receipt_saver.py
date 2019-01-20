@@ -189,10 +189,18 @@ class OFDReceiptSaver:
                 last_receipt_inshift = \
                 SalesData.objects.filter(address=place).filter(shift_number=shift_number).order_by(
                     '-receipt_num_inshift')[0]
-                close_receipt = self.get_receipt_by_num(shift_num=shift_number,
-                                                        receipt_num=last_receipt_inshift.receipt_num_inshift + 1,
-                                                        ofdru_conn=ofdru_conn)
-                self.create_new_entry_salesdata(close_receipt)
+
+                #Чтобы не получить ошибку по отсутствующему чеку, проверяем отдельным запросом, закрыта ли смена
+                response_closed_shift = ofdru_conn.get_closedshift_receipts(shift_number)
+                if response_closed_shift.status_code == 200:
+                    response_closed_shift = json.loads(response_closed_shift.text)
+
+                #Если в полученном ответе есть инфа, то смело получаем закрывающий чек
+                if response_closed_shift['Data']:
+                    close_receipt = self.get_receipt_by_num(shift_num=shift_number,
+                                                            receipt_num=last_receipt_inshift.receipt_num_inshift + 1,
+                                                            ofdru_conn=ofdru_conn)
+                    self.create_new_entry_salesdata(close_receipt)
             else:
                 pass
 
