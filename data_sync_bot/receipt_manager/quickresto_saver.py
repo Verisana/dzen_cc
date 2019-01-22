@@ -48,7 +48,8 @@ class QuickRestoSaver:
         receipt_num_inshift = len(SalesData.objects.filter(address=receipt.address, receipt_type='sale'))
         total_receipts, total_cash, total_card = self.count_shift_sums(receipt.address, receipt.shift_number, receipt_num_inshift)
         response = quickresto_conn.close_shift(shift_id, staff_name, receipt.deal_date,
-                                               total_receipts, total_cash, total_card)
+                                               float(round(total_receipts, 2)), float(round(total_cash, 2)),
+                                               float(round(total_card, 2)))
         if response.status_code == 200:
             receipt.is_uploaded_quickresto = True
             receipt.save()
