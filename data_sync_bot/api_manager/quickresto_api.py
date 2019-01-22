@@ -31,6 +31,14 @@ class QuickRestoConnector():
         }
         return self.send_request('api/create?moduleName=front.zreport', 'post', params=params)
 
+    def update_shift_employee(self, shift_id, employee_id):
+        params = {
+            'id': shift_id,
+            'openedEmployee': {'id': employee_id},
+            'closedEmployee': {'id': employee_id},
+        }
+        return self.send_request('api/update?moduleName=front.zreport', 'post', params=params)
+
     def close_shift(self, shift_id, employee_id, closed):
         params = {
             'id': shift_id,

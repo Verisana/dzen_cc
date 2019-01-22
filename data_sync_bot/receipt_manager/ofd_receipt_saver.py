@@ -17,6 +17,7 @@ class OFDReceiptSaver:
         self.ofdru_sett = OfdruApi.objects.get(name='OFDru_Dzen')
         self.places_to_sell = PlacesToSell.objects.all()
         self.employees_list = EmployeesList.objects.all()
+        self.default_employee = EmployeesList.objects.get(name='Не определен', surname='Не определен')
         self.goods_base = GoodsBase.objects.all()
 
     def check_response_for_errors(self, response, text, debug_info=None):
@@ -86,12 +87,6 @@ class OFDReceiptSaver:
         else:
             payment_type = 'electronic'
 
-        staff_name = None
-        for employee in self.employees_list:
-            if employee.mask_ident.lower() in receipt['Data']['Operator'].lower():
-                staff_name = employee
-                break
-
         sold_goods = []
         recognized_goods = []
         for item in receipt['Data']['Items']:
@@ -128,7 +123,6 @@ class OFDReceiptSaver:
         new_salesdata_object.sold_goods.set(sold_goods)
         new_salesdata_object.is_fulled = is_fulled
         new_salesdata_object.payment_type = payment_type
-        new_salesdata_object.staff_name = staff_name
         new_salesdata_object.save()
 
     def create_new_entry_salesdata(self, receipt):
@@ -146,6 +140,12 @@ class OFDReceiptSaver:
             last_receipt = \
             SalesData.objects.filter(shift_number=receipt['Data']['ShiftNumber']).order_by('-receipt_num_inshift')[0]
             receipt_num_inshift = last_receipt.receipt_num_inshift + 1
+
+        staff_name = self.default_employee
+        for employee in self.employees_list:
+            if employee.mask_ident.lower() in receipt['Data']['Operator'].lower():
+                staff_name = employee
+                break
 
         address = None
         for place in self.places_to_sell:
@@ -165,6 +165,7 @@ class OFDReceiptSaver:
                 'is_fulled': is_fulled,
                 'receipt_type': receipt_type,
                 'receipt_sum': receipt_sum,
+                'staff_name': staff_name,
             }
         )
 
@@ -238,7 +239,7 @@ class OFDReceiptSaver:
                                                        deal_date__range=(
                                                        timezone.now().astimezone() - timezone.timedelta(days=1),
                                                        timezone.now().astimezone())
-                                                       )
+                                                       ).order_by('receipt_num')
         if not sales_data_to_check:
             for counter, data in enumerate(sales_data_to_check):
                 if counter > 0:
@@ -249,11 +250,11 @@ class OFDReceiptSaver:
                         self.errors.invalid_response_content(filename, cf.f_code.co_name, cf.f_lineno,
                                                              data, text)
 
-    def check_new_receipts(self):
+    def check_new_receipts(self, minutes=60):
         for place in self.places_to_sell:
             ofdru_conn = OFDruConnector(setting_id=self.ofdru_sett.id, place_id=place.id)
             now_time = timezone.now().astimezone()
-            time_diff = now_time - timedelta(minutes=5)
+            time_diff = now_time - timedelta(minutes=minutes)
             receipts_by_date = self.get_receipts_bydate(time_diff.strftime('%Y-%m-%dT%H:%M'),
                                                         now_time.strftime('%Y-%m-%dT%H:%M'),
                                                         ofdru_conn)
