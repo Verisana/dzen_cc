@@ -115,7 +115,7 @@ class OFDReceiptSaver:
             self.errors.invalid_response_content(filename, cf.f_code.co_name, cf.f_lineno, receipt['Data']['Items'],
                                                  text)
 
-        if payment_type and sold_goods and staff_name:
+        if payment_type and sold_goods:
             is_fulled = True
         else:
             is_fulled = False
@@ -149,12 +149,12 @@ class OFDReceiptSaver:
 
         address = None
         for place in self.places_to_sell:
-            if place.kkt_number in receipt['Data']['KKT_RegNumber']:
+            if place.kkt_number in receipt['Data']['KKT_RegNumber'].replace(' ', ''):
                 address = place
                 break
 
         new_salesdata_object = SalesData.objects.update_or_create(
-            kkt_rnm=receipt['Data']['KKT_RegNumber'],
+            kkt_rnm=receipt['Data']['KKT_RegNumber'].replace(' ', ''),
             receipt_num=receipt['Data']['Document_Number'],
             defaults={
                 'shift_number': receipt['Data']['ShiftNumber'],
