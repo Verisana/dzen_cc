@@ -35,6 +35,7 @@ class QuickRestoConnector():
         params = {
             'id': shift_id,
             'openedEmployee': {'id': employee_id},
+            'kkmTerminal': {'id': self.places_to_sell.quickresto_kkm_id}
             'closedEmployee': {'id': employee_id},
         }
         return self.send_request('api/update?moduleName=front.zreport', 'post', params=params)
