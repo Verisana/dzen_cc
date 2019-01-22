@@ -65,7 +65,7 @@ class QuickRestoConnector():
              "entity": {"tableOrderCreateTime": date_create.isoformat().replace('+00:00', 'Z'), "documentNumber": sum_info['document_number'],
                         "createDate": date_create.isoformat().replace('+00:00', 'Z'), "returned": False,
                         "frontTotalPrice": sum_info['total_sum'], "frontTotalCashMinusDiscount": sum_info['cash_sum'],
-                        "frontTotalCard": sum_info['card_sum'], "cashier": {"id": general['employee_id']},
+                        "frontTotalCard": sum_info['card_sum'], "cashier": {"id": general['employee_id']}, "waiter": {"id": general['employee_id']},
                         "shiftId": f"{self.places_to_sell.quickresto_place_id}_{shift_info['shift_id']}",
                         "shift": {"id": shift_info['shift_id']}, "kkmTerminal": {"id": self.places_to_sell.quickresto_kkm_id}}}]
         payment = {"actionType": "create", "moduleName": "front.orders.payment",
