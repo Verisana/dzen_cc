@@ -39,7 +39,7 @@ class QuickRestoConnector():
         }
         return self.send_request('api/update?moduleName=front.zreport', 'post', params=params)
 
-    def close_shift(self, shift_id, employee_id, closed):
+    def close_shift(self, shift_id, employee_id, closed, total_receipts, total_cash, total_card):
         params = {
             'id': shift_id,
             'incomplete': False,
@@ -47,6 +47,10 @@ class QuickRestoConnector():
             'kkmTerminal': {'id': self.places_to_sell.quickresto_kkm_id},
             'closedEmployee': {'id': employee_id},
             'closed': closed.isoformat().replace('+00:00', 'Z'),
+            "totalCard": total_card,
+            "totalCash": total_cash,
+            "ordersCount": total_receipts,
+
         }
         return self.send_request('api/update?moduleName=front.zreport', 'post', params=params)
 
@@ -78,8 +82,8 @@ class QuickRestoConnector():
             orders.append(order)
         shift_update = {"actionType": "update", "moduleName": "front.zreport",
                         "entity": {'id': shift_info['shift_id'], 'kkmTerminal': {'id': self.places_to_sell.quickresto_kkm_id},
-                        'closedEmployee': {'id': general['employee_id']}, "totalCard": shift_info['total_card'],
-                        "totalCash": shift_info['total_cash'], "ordersCount": shift_info['total_receipts']}}
+                        "totalCard": shift_info['total_card'], "totalCash": shift_info['total_cash'],
+                        "ordersCount": shift_info['total_receipts']}}
 
         params.extend(orders)
         params.append(payment)

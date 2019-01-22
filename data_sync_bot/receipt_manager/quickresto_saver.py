@@ -45,7 +45,10 @@ class QuickRestoSaver:
             staff_name = None
         shift_id = SalesData.objects.get(address=receipt.address, shift_number=receipt.shift_number,
                                          receipt_num_inshift=0).quickresto_shift_id
-        response = quickresto_conn.close_shift(shift_id, staff_name, receipt.deal_date)
+        receipt_num_inshift = len(SalesData.objects.filter(address=receipt.address, receipt_type='sale'))
+        total_receipts, total_cash, total_card = self.count_shift_sums(receipt.address, receipt.shift_number, receipt_num_inshift)
+        response = quickresto_conn.close_shift(shift_id, staff_name, receipt.deal_date,
+                                               total_receipts, total_cash, total_card)
         if response.status_code == 200:
             receipt.is_uploaded_quickresto = True
             receipt.save()
@@ -137,7 +140,7 @@ class QuickRestoSaver:
     def update_quikresto(self):
         for place in self.places_to_sell:
             quickresto_conn = QuickRestoConnector(setting_id=1, place_id=place.id)
-            unsaved_receipts = SalesData.objects.filter(address=place, is_uploaded_quickresto=False).order_by('deal_date')
+            unsaved_receipts = SalesData.objects.filter(address=place, is_uploaded_quickresto=False).order_by('receipt_num')
             for receipt in unsaved_receipts:
                 if receipt.receipt_type == 'open_shift':
                     self.open_shift(receipt, quickresto_conn)
