@@ -258,7 +258,7 @@ class OFDReceiptSaver:
             receipts_by_date = self.get_receipts_bydate(time_diff.strftime('%Y-%m-%dT%H:%M'),
                                                         now_time.strftime('%Y-%m-%dT%H:%M'),
                                                         ofdru_conn)
-            self.check_close_shift_receipt(receipts_by_date['Data'][0]['DocShiftNumber'], ofdru_conn, place)
             self.check_integrity(ofdru_conn)
             if receipts_by_date != False:
+                self.check_close_shift_receipt(receipts_by_date['Data'][0]['DocShiftNumber'], ofdru_conn, place)
                 self.add_new_receipts(receipts_by_date, ofdru_conn, place)
