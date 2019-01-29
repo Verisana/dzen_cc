@@ -143,6 +143,7 @@ class OFDReceiptSaver:
 
         staff_name = self.default_employee
         for employee in self.employees_list:
+
             if employee.mask_ident.lower() in receipt['Data']['Operator'].lower():
                 staff_name = employee
                 break
@@ -198,10 +199,15 @@ class OFDReceiptSaver:
 
                 #Если в полученном ответе есть инфа, то смело получаем закрывающий чек
                 if response_closed_shift['Data']:
-                    close_receipt = self.get_receipt_by_num(shift_num=shift_number,
-                                                            receipt_num=last_receipt_inshift.receipt_num_inshift + 1,
-                                                            ofdru_conn=ofdru_conn)
-                    self.create_new_entry_salesdata(close_receipt)
+                    #Бывает так, что следующий чек не закрывающий, а отчетный. Его надо пропустить. Он нам не нужен
+                    for i in range(5):
+                        if i > 0:
+                            close_receipt = self.get_receipt_by_num(shift_num=shift_number,
+                                                                    receipt_num=last_receipt_inshift.receipt_num_inshift + i,
+                                                                    ofdru_conn=ofdru_conn)
+                            if close_receipt['Data']['Tag'] == 5:
+                                self.create_new_entry_salesdata(close_receipt)
+                                break
             else:
                 pass
 
