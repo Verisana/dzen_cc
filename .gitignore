@@ -16,7 +16,7 @@ local_settings.py
 *~
 .idea/
 __pycache__
-venv/ 
+venv/
 *log
 static_files/
-
+static/
